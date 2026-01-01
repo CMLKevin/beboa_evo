@@ -1,0 +1,24 @@
+{
+  "name": "beboa-bot",
+  "version": "1.0.0",
+  "description": "Discord loyalty/engagement bot for BubbleBebe's community - Beboa the sadistic snake companion",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "loyalty",
+    "engagement"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^11.6.0",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7"
+  }
+}
