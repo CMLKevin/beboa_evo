@@ -30,7 +30,7 @@ export const data = new SlashCommandBuilder()
             .setName('message')
             .setDescription('What do you want to say to Beboa?')
             .setRequired(true)
-            .setMaxLength(500)
+            .setMaxLength(2000)
     );
 
 export async function execute(interaction) {

@@ -45,7 +45,7 @@ export const config = {
     // OpenRouter Configuration (optional - chat feature)
     OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || null,
     OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat',
-    OPENROUTER_MAX_TOKENS: parseInt(process.env.OPENROUTER_MAX_TOKENS) || 300,
+    OPENROUTER_MAX_TOKENS: parseInt(process.env.OPENROUTER_MAX_TOKENS) || 1000,
     OPENROUTER_TEMPERATURE: parseFloat(process.env.OPENROUTER_TEMPERATURE) || 0.9,
 
     // Chat Feature Settings
