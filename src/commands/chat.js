@@ -5,7 +5,12 @@
 
 import { SlashCommandBuilder } from 'discord.js';
 import { config } from '../config.js';
-import { getUser } from '../database.js';
+import {
+    getUser,
+    addChatMessage,
+    getChatHistory,
+    clearAllChatHistory
+} from '../database.js';
 import { isOpenRouterConfigured, chatCompletion } from '../services/openrouter.js';
 import {
     BEBOA_SYSTEM_PROMPT,
@@ -14,10 +19,6 @@ import {
     getCooldownMessage,
     getDisabledMessage
 } from '../utils/beboa-persona.js';
-
-// SHARED conversation history - all users in one history so Beboa remembers everyone
-// Format: { messages: [{displayName, content, role}, ...], lastMessageTime: timestamp }
-let sharedConversationCache = { messages: [], lastMessageTime: Date.now() };
 
 // Cooldown tracking
 const cooldowns = new Map();
@@ -75,8 +76,8 @@ export async function execute(interaction) {
             });
         }
 
-        // Store in shared conversation history
-        updateSharedHistory(displayName, userMessage, result.content);
+        // Store in persistent conversation history
+        saveConversation(displayName, userMessage, result.content);
 
         // Set cooldown
         setCooldown(userId);
@@ -99,11 +100,12 @@ export async function execute(interaction) {
 
 /**
  * Build the messages array for the API call
- * Uses SHARED history so Beboa remembers all users naturally
+ * Uses SHARED history from database so Beboa remembers all users across restarts
  */
 function buildMessageArray(displayName, userData, currentMessage) {
-    // Get shared conversation history (all users together)
-    const history = getSharedHistory();
+    // Get shared conversation history from database (limited by CHAT_MAX_HISTORY)
+    const maxHistory = (config.CHAT_MAX_HISTORY || 10) * 2; // *2 because each exchange is 2 messages
+    const history = getChatHistory(maxHistory);
 
     // Build system prompt with current user context
     const userContext = buildUserContext(userData, displayName);
@@ -117,7 +119,7 @@ function buildMessageArray(displayName, userData, currentMessage) {
     // Add shared conversation history - each message tagged with who said it
     history.forEach(msg => {
         if (msg.role === 'user') {
-            messages.push({ role: 'user', content: `[${msg.displayName}]: ${msg.content}` });
+            messages.push({ role: 'user', content: `[${msg.display_name}]: ${msg.content}` });
         } else {
             messages.push({ role: 'assistant', content: msg.content });
         }
@@ -130,48 +132,17 @@ function buildMessageArray(displayName, userData, currentMessage) {
 }
 
 /**
- * Get shared conversation history (all users together)
- * @returns {Array} Array of {displayName, content, role} messages
- */
-function getSharedHistory() {
-    // Check if history is stale (more than 30 minutes since last message)
-    const thirtyMinutes = 30 * 60 * 1000;
-    if (Date.now() - sharedConversationCache.lastMessageTime > thirtyMinutes) {
-        sharedConversationCache = { messages: [], lastMessageTime: Date.now() };
-        return [];
-    }
-
-    return sharedConversationCache.messages;
-}
-
-/**
- * Update shared conversation history with new exchange
+ * Save conversation exchange to database
  * @param {string} displayName - User's display name
  * @param {string} userMessage - User's message
  * @param {string} assistantResponse - Beboa's response
  */
-function updateSharedHistory(displayName, userMessage, assistantResponse) {
-    // Add user message
-    sharedConversationCache.messages.push({
-        displayName: displayName,
-        content: userMessage,
-        role: 'user'
-    });
+function saveConversation(displayName, userMessage, assistantResponse) {
+    // Save user message
+    addChatMessage(displayName, userMessage, 'user');
 
-    // Add assistant response
-    sharedConversationCache.messages.push({
-        displayName: 'Beboa',
-        content: assistantResponse,
-        role: 'assistant'
-    });
-
-    // Trim to max history length (counting message pairs)
-    const maxHistory = (config.CHAT_MAX_HISTORY || 10) * 2; // *2 because each exchange is 2 messages
-    if (sharedConversationCache.messages.length > maxHistory) {
-        sharedConversationCache.messages = sharedConversationCache.messages.slice(-maxHistory);
-    }
-
-    sharedConversationCache.lastMessageTime = Date.now();
+    // Save assistant response
+    addChatMessage('Beboa', assistantResponse, 'assistant');
 }
 
 /**
@@ -203,10 +174,10 @@ function setCooldown(userId) {
 }
 
 /**
- * Clear shared conversation history
+ * Clear all conversation history
  */
 export function clearHistory() {
-    sharedConversationCache = { messages: [], lastMessageTime: Date.now() };
+    clearAllChatHistory();
 }
 
 /**
@@ -214,9 +185,10 @@ export function clearHistory() {
  * @returns {Object} Statistics about chat usage
  */
 export function getChatStats() {
+    const history = getChatHistory(100);
     return {
-        activeConversations: sharedConversationCache.messages.length > 0 ? 1 : 0,
-        totalMessages: sharedConversationCache.messages.length,
+        activeConversations: history.length > 0 ? 1 : 0,
+        totalMessages: history.length,
         activeCooldowns: cooldowns.size
     };
 }

@@ -45,6 +45,16 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_bebits ON users(bebits DESC);
     CREATE INDEX IF NOT EXISTS idx_users_streak ON users(current_streak DESC);
     CREATE INDEX IF NOT EXISTS idx_redemptions_user ON redemptions(discord_id);
+
+    CREATE TABLE IF NOT EXISTS chat_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        display_name TEXT NOT NULL,
+        content TEXT NOT NULL,
+        role TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chat_history_created ON chat_history(created_at DESC);
 `);
 
 // Add beboa_notes column if it doesn't exist (for existing databases)
@@ -137,6 +147,28 @@ const statements = {
 
     getUsersByIds: db.prepare(`
         SELECT discord_id, bebits, current_streak, beboa_notes FROM users WHERE discord_id IN (SELECT value FROM json_each(?))
+    `),
+
+    // Chat history statements
+    addChatMessage: db.prepare(`
+        INSERT INTO chat_history (display_name, content, role)
+        VALUES (?, ?, ?)
+    `),
+
+    getChatHistory: db.prepare(`
+        SELECT display_name, content, role, created_at
+        FROM chat_history
+        ORDER BY id DESC
+        LIMIT ?
+    `),
+
+    clearOldChatHistory: db.prepare(`
+        DELETE FROM chat_history
+        WHERE created_at < datetime('now', ?)
+    `),
+
+    clearAllChatHistory: db.prepare(`
+        DELETE FROM chat_history
     `)
 };
 
@@ -329,6 +361,46 @@ export function getMentionedUsersData(discordIds) {
             return null;
         }).filter(Boolean);
     }
+}
+
+/**
+ * Add a message to chat history
+ * @param {string} displayName - User's display name (or 'Beboa' for assistant)
+ * @param {string} content - Message content
+ * @param {string} role - 'user' or 'assistant'
+ */
+export function addChatMessage(displayName, content, role) {
+    statements.addChatMessage.run(displayName, content, role);
+}
+
+/**
+ * Get recent chat history
+ * @param {number} limit - Max number of messages to return
+ * @returns {Array} Array of {display_name, content, role, created_at} in chronological order
+ */
+export function getChatHistory(limit = 20) {
+    // Query returns newest first, so reverse for chronological order
+    const messages = statements.getChatHistory.all(limit);
+    return messages.reverse();
+}
+
+/**
+ * Clear chat history older than specified duration
+ * @param {string} olderThan - SQLite duration string (e.g., '-30 minutes', '-1 hour')
+ */
+export function clearOldChatHistory(olderThan = '-30 minutes') {
+    const result = statements.clearOldChatHistory.run(olderThan);
+    if (result.changes > 0) {
+        console.log(`[DATABASE] Cleared ${result.changes} old chat messages`);
+    }
+}
+
+/**
+ * Clear all chat history
+ */
+export function clearAllChatHistory() {
+    const result = statements.clearAllChatHistory.run();
+    console.log(`[DATABASE] Cleared all chat history (${result.changes} messages)`);
 }
 
 /**
