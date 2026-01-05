@@ -755,19 +755,51 @@ async function handleJarvisRevoke(interaction) {
  * Handle /admin jarvis commands
  */
 async function handleJarvisCommands(interaction) {
-    const commands = getAvailableAdminCommands();
+    const commandsByCategory = getAvailableAdminCommands();
 
-    let response = `**Available Jarvis-Style Commands**\n\n`;
-    response += `These commands can be executed by asking Beboa naturally:\n\n`;
+    const embed = new EmbedBuilder()
+        .setTitle('🐍 Jarvis Mode Commands')
+        .setDescription('Talk to Beboa naturally to execute these commands!\n`@Beboa [your request]`')
+        .setColor(0x9B59B6);
 
-    for (const cmd of commands) {
-        response += `• **${cmd.name}**: ${cmd.description}\n`;
+    const categoryEmojis = {
+        bebits: '💰',
+        streak: '🔥',
+        info: '📊',
+        memory: '🧠',
+        personality: '🎭',
+        fun: '🎉',
+        admin: '⚙️'
+    };
+
+    for (const [category, commands] of Object.entries(commandsByCategory)) {
+        const emoji = categoryEmojis[category] || '📌';
+        let fieldValue = '';
+
+        for (const cmd of commands.slice(0, 5)) {
+            fieldValue += `\`${cmd.examples[0]}\`\n`;
+        }
+        if (commands.length > 5) {
+            fieldValue += `*...and ${commands.length - 5} more*`;
+        }
+
+        embed.addFields({
+            name: `${emoji} ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+            value: fieldValue || '*No commands*',
+            inline: true
+        });
     }
 
-    response += `\n*Example: "@Beboa give @user 100 bebits"*`;
+    embed.addFields({
+        name: '✨ Smart Features',
+        value: '• Multi-stage intent parsing\n• AI fallback for complex requests\n• Follow-up context ("give them 50 more")\n• Natural language understanding',
+        inline: false
+    });
+
+    embed.setFooter({ text: 'Talk naturally - Beboa will figure out what you mean~' });
 
     await interaction.reply({
-        content: response,
+        embeds: [embed],
         ephemeral: true
     });
 }
