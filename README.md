@@ -1,15 +1,29 @@
 # Beboa Bot
 
-A Discord loyalty/engagement bot for BubbleBebe's community server. Beboa is an AI-powered snake companion who tracks daily check-ins, awards "Bebits" currency, allows users to redeem rewards, and engages in conversations with her bratty personality.
+A Discord loyalty/engagement bot for BubbleBebe's community server. Beboa is an AI-powered snake companion with a dynamic evolving personality who tracks daily check-ins, awards "Bebits" currency, remembers conversations through semantic memory, and builds genuine relationships with community members over time.
 
 ## Features
 
+### Core Features
 - **Daily Check-ins** - Users earn 1 Bebit per day with `/checkin`
-- **Streak System** - 72-hour grace period to maintain streaks (cosmetic only)
+- **Streak System** - 72-hour grace period to maintain streaks
 - **Leaderboard** - Top 10 users ranked by Bebits
 - **Reward Shop** - 11 reward tiers from 1 to 500 Bebits
-- **AI Chat with Beboa** - Talk to Beboa via `/chat` or @mentions
-- **Admin Tools** - Manage Bebits, streaks, chat history, and view stats
+
+### AI Evolution System
+- **Dynamic Personality** - 14 personality traits that evolve through interactions
+- **Mood System** - 12 distinct moods affecting behavior (happy, annoyed, mischievous, etc.)
+- **Relationship Tracking** - Per-user relationship stages from Stranger → Family
+- **Semantic Memory** - Vector-based long-term memory with auto-extraction
+- **Channel Awareness** - Sees past 20 messages for context
+- **Tool Calls** - Image generation, memory recall, and extensible tools
+- **Jarvis Mode** - Natural language admin commands for bebe.blu
+
+### Admin Tools
+- Manage Bebits, streaks, and view stats
+- Memory management (add, search, view status)
+- Personality control (view state, set mood, view relationships)
+- Jarvis permission management
 
 ## Quick Start
 
@@ -17,14 +31,14 @@ A Discord loyalty/engagement bot for BubbleBebe's community server. Beboa is an 
 
 - Node.js 20 or higher
 - A Discord bot application with a token
-- OpenRouter API key (optional, for AI chat feature)
+- OpenRouter API key (required for AI features)
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd beboa-bot
+   git clone https://github.com/CMLKevin/beboa_evo.git
+   cd beboa_evo
    ```
 
 2. Install dependencies:
@@ -37,31 +51,11 @@ A Discord loyalty/engagement bot for BubbleBebe's community server. Beboa is an 
    cp .env.example .env
    ```
 
-   Edit `.env` with your Discord credentials:
-   ```env
-   # Discord Configuration (Required)
-   DISCORD_TOKEN=your_bot_token
-   CLIENT_ID=your_application_client_id
-   GUILD_ID=your_server_id
-   CHECKIN_CHANNEL_ID=your_checkin_channel_id
-   NOTIFICATION_CHANNEL_ID=your_notification_channel_id
-   ADMIN_ROLE_ID=role_to_ping_for_redemptions
+   Edit `.env` with your credentials (see Configuration section below)
 
-   # OpenRouter Configuration (Optional - for AI chat)
-   OPENROUTER_API_KEY=your_openrouter_api_key_here
-   OPENROUTER_MODEL=deepseek/deepseek-v3.2
-   OPENROUTER_MAX_TOKENS=200
-   OPENROUTER_TEMPERATURE=1
-
-   # Chat Settings
-   CHAT_COOLDOWN_SECONDS=1
-   CHAT_MAX_HISTORY=50
-   CHAT_ENABLED=true
-   ```
-
-4. Enable MessageContent Intent (required for @mentions):
+4. Enable MessageContent Intent:
    - Go to [Discord Developer Portal](https://discord.com/developers/applications)
-   - Select your application -> Bot
+   - Select your application → Bot
    - Enable "Message Content Intent" under Privileged Gateway Intents
 
 5. Start the bot:
@@ -69,28 +63,60 @@ A Discord loyalty/engagement bot for BubbleBebe's community server. Beboa is an 
    npm start
    ```
 
-   For development with auto-reload:
-   ```bash
-   npm run dev
-   ```
+## Configuration
 
-### Getting Discord IDs
+### Required Variables
 
-1. Enable Developer Mode in Discord (User Settings > Advanced > Developer Mode)
-2. Right-click on channels, roles, or the server to copy their IDs
+```env
+# Discord Configuration
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_application_client_id
+GUILD_ID=your_server_id
+CHECKIN_CHANNEL_ID=your_checkin_channel_id
+NOTIFICATION_CHANNEL_ID=your_notification_channel_id
+ADMIN_ROLE_ID=role_to_ping_for_redemptions
 
-### Bot Permissions
-
-When inviting the bot, ensure it has these permissions:
-- Send Messages
-- Use Application Commands
-- Embed Links
-- Mention Everyone (for pinging the admin role)
-- Read Message Content (privileged intent, for @mentions)
-
-Invite URL format:
+# OpenRouter API (Required for AI)
+OPENROUTER_API_KEY=your_openrouter_api_key
 ```
-https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=2147485696&scope=bot%20applications.commands
+
+### AI Model Configuration
+
+```env
+# Chat Model
+OPENROUTER_MODEL=deepseek/deepseek-chat
+OPENROUTER_MAX_TOKENS=1000
+OPENROUTER_TEMPERATURE=0.9
+
+# Embedding Model (for semantic memory)
+EMBEDDING_MODEL=openai/text-embedding-3-small
+
+# Image Generation Model
+IMAGE_MODEL=bytedance-seed/seedream-4.5
+
+# Memory Extraction Model
+EXTRACTION_MODEL=x-ai/grok-4.1-fast
+```
+
+### Feature Settings
+
+```env
+# Chat
+CHAT_COOLDOWN_SECONDS=1
+CHAT_MAX_HISTORY=150
+CHAT_ENABLED=true
+
+# Memory System
+MEMORY_ENABLED=true
+MEMORY_AUTO_EXTRACT=true
+CHANNEL_CONTEXT_LIMIT=20
+
+# Tools
+TOOLS_ENABLED=true
+IMAGE_GEN_ENABLED=true
+
+# Jarvis Mode (bebe.blu's user ID)
+BEBE_USER_ID=your_bebe_user_id
 ```
 
 ## Commands
@@ -104,9 +130,12 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=21
 | `/leaderboard` | View top 10 users | Any |
 | `/shop` | Browse and redeem rewards | Any |
 | `/chat` | Talk to Beboa | Any |
+| `/summarize` | Summarize channel messages | Any |
+| `@Beboa` | Mention Beboa to chat | Any |
 
 ### Admin Commands
 
+#### Bebits Management
 | Command | Description |
 |---------|-------------|
 | `/admin bebits add @user <amount>` | Add Bebits to a user |
@@ -114,55 +143,183 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=21
 | `/admin bebits set @user <amount>` | Set a user's Bebits balance |
 | `/admin streak reset @user` | Reset a user's streak |
 | `/admin stats` | View server statistics |
-| `/admin chat clear` | Clear all shared conversation history |
-| `/admin chat status` | View chat feature status and config |
-| `/admin chat viewnote @user` | View Beboa's notes about a user |
-| `/admin chat setnote @user <note>` | Set Beboa's notes about a user |
-| `/admin chat clearnote @user` | Clear Beboa's notes about a user |
 
-## AI Chat Feature
+#### Chat & Notes
+| Command | Description |
+|---------|-------------|
+| `/admin chat clear` | Clear all conversation history |
+| `/admin chat status` | View chat feature status |
+| `/admin chat viewnote @user` | View notes about a user |
+| `/admin chat setnote @user <note>` | Set notes about a user |
+| `/admin chat clearnote @user` | Clear notes about a user |
 
-Beboa has an AI-powered personality that users can interact with. She's a bratty, arrogant snake who secretly cares about the community.
+#### Memory System
+| Command | Description |
+|---------|-------------|
+| `/admin memory add @user <content>` | Add a memory about a user |
+| `/admin memory search <query>` | Search Beboa's memories |
+| `/admin memory status` | View memory system status |
 
-### Talking to Beboa
+#### Personality System
+| Command | Description |
+|---------|-------------|
+| `/admin personality status` | View current personality state & mood |
+| `/admin personality mood <mood>` | Set Beboa's current mood |
+| `/admin personality relationship @user` | View relationship with a user |
 
-There are two ways to chat with Beboa:
+#### Jarvis Permissions
+| Command | Description |
+|---------|-------------|
+| `/admin jarvis grant @user` | Grant Jarvis-style command permission |
+| `/admin jarvis revoke @user` | Revoke Jarvis permission |
+| `/admin jarvis commands` | List available Jarvis commands |
 
-1. **Slash Command**: Use `/chat message:Your message here`
-2. **@Mention**: Simply mention @Beboa in any message
+#### Tools
+| Command | Description |
+|---------|-------------|
+| `/admin tools` | View registered AI tools |
 
-Both methods share the same conversation history, so Beboa remembers context across interactions.
+## AI Evolution System
 
-### Shared Conversation Memory
+### Dynamic Personality
 
-- All users share a single conversation history - Beboa sees and remembers everyone's messages
-- Messages are tagged with usernames: `[Username]: message`
-- History persists across bot restarts (stored in database)
-- History is limited to the last N exchanges (configurable via `CHAT_MAX_HISTORY`)
-- Admins can clear history with `/admin chat clear`
+Beboa has 14 personality traits that evolve through interactions:
 
-### Beboa's Personality
+**Big Five Inspired:**
+- Openness (curiosity, creativity)
+- Conscientiousness (organization vs chaos)
+- Extraversion (energy, sociability)
+- Agreeableness (warmth beneath snark)
+- Neuroticism (emotional reactivity)
 
-- **Bratty & Arrogant** - Acts superior and condescending
-- **Strict & Nagging** - Pushes users to be responsible and maintain their streaks
-- **Secretly Caring** - Her strictness comes from genuine care
-- **In-Character Always** - Never breaks character, insists she's a real snake
+**Beboa-Specific:**
+- Tsundere Level (defensive about caring)
+- Snarkiness (wit and sass)
+- Protectiveness (toward community)
+- Chaos Energy (unpredictability)
+- Wisdom (when to be serious)
+- Playfulness (joking and teasing)
+- Patience (tolerance for annoyance)
+- Competitiveness (drive to win)
+- Vulnerability (willingness to show softness)
 
-She knows about users' Bebits and streaks, and may reference them in conversation.
+### Mood System
 
-### Configuration
+12 distinct moods that temporarily modify personality expression:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENROUTER_API_KEY` | Your OpenRouter API key | (required for chat) |
-| `OPENROUTER_MODEL` | AI model to use | `deepseek/deepseek-chat` |
-| `OPENROUTER_MAX_TOKENS` | Max response length | `300` |
-| `OPENROUTER_TEMPERATURE` | Response creativity (0-2) | `0.9` |
-| `CHAT_COOLDOWN_SECONDS` | Cooldown between messages per user | `30` |
-| `CHAT_MAX_HISTORY` | Max conversation exchanges to remember | `10` |
-| `CHAT_ENABLED` | Enable/disable chat feature | `true` |
+| Mood | Effect | Duration |
+|------|--------|----------|
+| Neutral | Default state | 60 min |
+| Happy | +playfulness, -snarkiness | 45 min |
+| Annoyed | +snarkiness, -patience | 30 min |
+| Mischievous | +chaos, scheming energy | 40 min |
+| Protective | +protectiveness, -tsundere | 60 min |
+| Flustered | +tsundere, caught being nice | 20 min |
+| Bored | +chaos, needs entertainment | 30 min |
+| Energetic | +extraversion, high energy | 35 min |
+| Melancholic | +wisdom, thoughtful | 45 min |
+| Competitive | Game on mode | 30 min |
+| Smug | Feeling superior | 25 min |
+| Soft | Rare genuine warmth | 20 min |
 
-Set `CHAT_ENABLED=false` to disable the chat feature entirely.
+### Relationship Stages
+
+Beboa's behavior changes based on familiarity with each user:
+
+| Stage | Familiarity | Behavior |
+|-------|-------------|----------|
+| Stranger | 0-20% | Sizing them up, default snark |
+| Acquaintance | 20-40% | Recognizes them, slightly warmer |
+| Regular | 40-60% | Comfortable teasing, remembers things |
+| Friend | 60-80% | Genuine care beneath snark, inside jokes |
+| Close Friend | 80-95% | Protective, drops act occasionally |
+| Family | 95%+ | Would die for them (not that she'd admit it) |
+
+### Semantic Memory
+
+Beboa remembers facts about users through vector embeddings:
+
+- **Auto-extraction** - Automatically detects and stores facts from conversations
+- **Semantic search** - Finds relevant memories by meaning, not just keywords
+- **Memory types** - Facts, preferences, events, relationships, jokes, lore
+- **Natural recall** - References memories naturally in conversation
+
+### Jarvis Mode
+
+For bebe.blu (server owner), Beboa executes admin commands via natural language:
+
+```
+"@Beboa give @user 100 bebits"
+"@Beboa reset @user's streak"
+"@Beboa remember that @user loves cats"
+"@Beboa show me the server stats"
+```
+
+## Project Structure
+
+```
+beboa-bot/
+├── src/
+│   ├── index.js              # Entry point
+│   ├── config.js             # Environment config
+│   ├── database.js           # SQLite database
+│   ├── commands/
+│   │   ├── checkin.js
+│   │   ├── balance.js
+│   │   ├── leaderboard.js
+│   │   ├── shop.js
+│   │   ├── chat.js           # AI chat command
+│   │   ├── summarize.js      # Channel summarization
+│   │   └── admin.js          # All admin commands
+│   ├── handlers/
+│   │   ├── commandHandler.js
+│   │   ├── buttonHandler.js
+│   │   └── messageHandler.js # @mention handler + context
+│   ├── migrations/
+│   │   ├── runner.js
+│   │   ├── index.js
+│   │   ├── 001_initial_schema.js
+│   │   ├── 002_add_beboa_notes.js
+│   │   ├── 003_add_chat_history.js
+│   │   ├── 004_add_memory_system.js
+│   │   └── 005_add_personality_system.js
+│   ├── services/
+│   │   ├── openrouter.js     # OpenRouter API client
+│   │   ├── embedding.js      # Vector embeddings
+│   │   ├── memory.js         # Semantic memory system
+│   │   ├── personality.js    # Dynamic personality
+│   │   ├── tools.js          # AI tool framework
+│   │   ├── channelContext.js # Channel awareness
+│   │   └── adminCommands.js  # Jarvis-style commands
+│   └── utils/
+│       ├── beboa-persona.js  # AI personality & prompts
+│       ├── rewards.js
+│       ├── messages.js
+│       └── time.js
+├── data/
+│   └── beboa.db              # SQLite database
+├── .env.example
+├── package.json
+└── README.md
+```
+
+## Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `users` | User data, bebits, streaks, notes |
+| `redemptions` | Reward redemption history |
+| `chat_history` | Persistent conversation history |
+| `semantic_memories` | Long-term memories with embeddings |
+| `memory_embeddings` | Vector embeddings for semantic search |
+| `tool_usage` | Tool invocation logs |
+| `personality_state` | Current personality traits and mood |
+| `personality_evolution` | Trait change history |
+| `user_relationships` | Per-user relationship data |
+| `mood_history` | Mood change history |
+| `admin_permissions` | Jarvis permission grants |
+| `user_interactions` | Detailed interaction tracking |
+| `_migrations` | Applied migrations |
 
 ## Reward Tiers
 
@@ -180,131 +337,6 @@ Set `CHAT_ENABLED=false` to disable the chat feature entirely.
 | Voice Message (5-10 min) | 360 Bebits |
 | GF For A Day | 500 Bebits |
 
-## Mechanics
-
-### Check-in Rules
-
-- **Cooldown:** 24 hours between check-ins
-- **Grace Period:** 72 hours to maintain streak
-- **Bebits on Reset:** Kept (only streak resets)
-
-### Streak Logic
-
-| Time Since Last Check-in | Result |
-|--------------------------|--------|
-| < 24 hours | Cooldown - wait |
-| 24-72 hours | Streak continues (+1) |
-| > 72 hours | Streak resets to 1 |
-
-## Project Structure
-
-```
-beboa-bot/
-├── src/
-│   ├── index.js              # Entry point
-│   ├── config.js             # Environment config
-│   ├── database.js           # SQLite database
-│   ├── commands/
-│   │   ├── checkin.js
-│   │   ├── balance.js
-│   │   ├── leaderboard.js
-│   │   ├── shop.js
-│   │   ├── chat.js           # AI chat command
-│   │   ├── summarize.js      # Channel summarization
-│   │   └── admin.js
-│   ├── handlers/
-│   │   ├── commandHandler.js
-│   │   ├── buttonHandler.js
-│   │   └── messageHandler.js # @mention handler
-│   ├── migrations/           # Database migrations
-│   │   ├── runner.js         # Migration runner
-│   │   ├── index.js          # Migration registry
-│   │   └── 001_*.js          # Individual migrations
-│   ├── services/
-│   │   └── openrouter.js     # OpenRouter API client
-│   └── utils/
-│       ├── beboa-persona.js  # AI personality & prompts
-│       ├── rewards.js
-│       ├── messages.js
-│       └── time.js
-├── data/
-│   └── beboa.db              # SQLite database (created at runtime)
-├── .env
-├── .env.example
-├── package.json
-└── README.md
-```
-
-## Database
-
-The bot uses SQLite stored in `data/beboa.db`. The database is created automatically on first run.
-
-### Migrations
-
-Database schema changes are handled through migrations, ensuring safe updates without data loss.
-
-**Migrations run automatically** when the bot starts - no manual steps required. The bot tracks which migrations have been applied in the `_migrations` table and only runs new ones.
-
-To check migration status, look for log output on startup:
-```
-[MIGRATIONS] Running: 003_add_chat_history
-[MIGRATIONS] Completed: 003_add_chat_history
-[MIGRATIONS] Applied 1 migration(s)
-```
-
-Or if already up to date:
-```
-[MIGRATIONS] Database is up to date
-```
-
-### Creating New Migrations
-
-When you need to change the database schema:
-
-1. Create a new migration file in `src/migrations/`:
-   ```javascript
-   // src/migrations/004_your_change.js
-   export const name = '004_your_change';
-
-   export function up(db) {
-       // Use db.exec() for schema changes
-       db.exec(`ALTER TABLE users ADD COLUMN new_field TEXT`);
-   }
-
-   export default { name, up };
-   ```
-
-2. Register it in `src/migrations/index.js`:
-   ```javascript
-   import migration004 from './004_your_change.js';
-
-   export const migrations = [
-       // ... existing migrations
-       migration004,
-   ];
-   ```
-
-3. The migration will run automatically on next bot startup.
-
-**Tips:**
-- Use `IF NOT EXISTS` for tables/indexes to make migrations idempotent
-- Check if columns exist before adding them (see `002_add_beboa_notes.js` for example)
-- Migrations run in a transaction - if one fails, it rolls back
-
-### Backup
-
-To backup the database:
-```bash
-cp data/beboa.db backups/beboa_$(date +%Y%m%d).db
-```
-
-### Tables
-
-- `users` - User data (discord_id, bebits, current_streak, last_checkin, total_checkins, beboa_notes)
-- `redemptions` - Reward redemption history
-- `chat_history` - Persistent AI conversation history
-- `_migrations` - Tracks applied migrations
-
 ## Deployment
 
 ### Railway
@@ -315,16 +347,24 @@ cp data/beboa.db backups/beboa_$(date +%Y%m%d).db
 
 ### VPS / DigitalOcean
 
-1. Clone the repository to your server
-2. Install Node.js 20+
-3. Run `npm install --production`
-4. Use PM2 for process management:
-   ```bash
-   npm install -g pm2
-   pm2 start src/index.js --name beboa
-   pm2 save
-   pm2 startup
-   ```
+```bash
+# Clone and setup
+git clone https://github.com/CMLKevin/beboa_evo.git
+cd beboa_evo
+npm install --production
+
+# Use PM2 for process management
+npm install -g pm2
+pm2 start src/index.js --name beboa
+pm2 save
+pm2 startup
+```
+
+### Backup
+
+```bash
+cp data/beboa.db backups/beboa_$(date +%Y%m%d).db
+```
 
 ## License
 
