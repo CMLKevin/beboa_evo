@@ -17,7 +17,7 @@ A Discord loyalty/engagement bot for BubbleBebe's community server. Beboa is an 
 - **Semantic Memory** - Vector-based long-term memory with auto-extraction
 - **Channel Awareness** - Sees past 20 messages for context
 - **Tool Calls** - Image generation, memory recall, and extensible tools
-- **Jarvis Mode** - Natural language admin commands for bebe.blu
+- **Jarvis Mode 2.0** - Smart natural language admin commands with 25+ commands, AI fallback, and context awareness
 
 ### Admin Tools
 - Manage Bebits, streaks, and view stats
@@ -244,16 +244,69 @@ Beboa remembers facts about users through vector embeddings:
 - **Memory types** - Facts, preferences, events, relationships, jokes, lore
 - **Natural recall** - References memories naturally in conversation
 
-### Jarvis Mode
+### Jarvis Mode 2.0
 
-For bebe.blu (server owner), Beboa executes admin commands via natural language:
+For bebe.blu (server owner), Beboa executes admin commands via natural language with smart intent parsing.
 
-```
-"@Beboa give @user 100 bebits"
-"@Beboa reset @user's streak"
-"@Beboa remember that @user loves cats"
-"@Beboa show me the server stats"
-```
+#### Available Commands
+
+**💰 Bebits Management:**
+| Command | Examples |
+|---------|----------|
+| Give bebits | `give @user 100 bebits`, `award @user 50 points`, `bless them with 200` |
+| Remove bebits | `take 50 from @user`, `yoink 100 from @user`, `yeet 25 from them` |
+| Set bebits | `set @user bebits to 500`, `@user bebits = 100` |
+| Transfer | `transfer 100 from @user1 to @user2` |
+| Mass give | `award everyone 10 bebits`, `give @user1 @user2 50 each` |
+
+**📊 Info Commands:**
+| Command | Examples |
+|---------|----------|
+| User info | `info @user`, `check @user`, `tell me about @user` |
+| Compare users | `compare @user1 vs @user2`, `@user1 versus @user2` |
+| Server stats | `server stats`, `how is the server doing` |
+
+**🧠 Memory Commands:**
+| Command | Examples |
+|---------|----------|
+| Add note | `remember that @user loves cats`, `note about @user: allergic to peanuts` |
+| Search | `what do you remember about cats`, `recall birthday` |
+
+**🎭 Personality Commands:**
+| Command | Examples |
+|---------|----------|
+| Set mood | `set mood to mischievous`, `beboa be happy` |
+| Status | `how are you feeling`, `personality status` |
+
+**🎉 Fun Commands:**
+| Command | Examples |
+|---------|----------|
+| Bonk | `bonk @user`, `send @user to horny jail` |
+| Shame | `shame @user`, `expose @user`, `blast @user` |
+| Praise | `praise @user`, `hype @user`, `gas up @user` |
+| Roast | `roast @user`, `destroy @user`, `drag @user` |
+| Simp check | `simp check @user`, `is @user a simp` |
+| Crown/Dethrone | `crown @user`, `dethrone @user` |
+| Fortune | `fortune @user`, `predict @user's future` |
+| Ship | `ship @user1 x @user2`, `compatibility @user1 @user2` |
+| Wheel of Fate | `spin wheel for @user`, `wheel of fate @user` |
+
+#### Smart Intent Parsing
+
+Jarvis Mode uses a 5-stage parsing pipeline:
+
+1. **Pattern Matching** - Regex-based exact matching
+2. **Intent Analysis** - Keyword scoring with 25+ synonym mappings
+3. **Entity Extraction** - Automatic user/amount/text detection
+4. **AI Fallback** - Chain-of-thought parsing for complex requests
+5. **Context Substitution** - "give them 50 more" uses previous user
+
+**Features:**
+- Conversation context (remembers who you were talking about)
+- Word number recognition ("fifty" = 50)
+- Fuzzy typo tolerance
+- Clarification questions when confidence is low
+- Synonym support: yoink, yeet, bless, nuke, etc.
 
 ## Project Structure
 
